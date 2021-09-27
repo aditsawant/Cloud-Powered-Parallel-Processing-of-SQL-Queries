@@ -1,0 +1,10 @@
+• [DONE] Commit the current working Spark code.
+• [DONE] Write code to insert headers in each csv.
+• [INVALID] Replace Spark SQL with Java SQL.
+• [DONE] Add Movie, Users, Ratings, Zipcodes classes
+• [DONE] Add TableFactory + Table classes.
+• Add value2-as-column functionality for where.
+• Add aggregation support for select
+• Add epsilon for having check
+• Add code to handle string comparisons in "where" in SQLQueries
+• Add file input/output support
