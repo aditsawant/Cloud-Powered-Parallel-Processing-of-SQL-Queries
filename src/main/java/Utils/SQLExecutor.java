@@ -29,13 +29,8 @@ public class SQLExecutor {
 
 		return stringArray;
 	}
-<<<<<<< Updated upstream:src/main/java/SQLExecutor.java
 //  static final Logger log = Logger.getLogger(SQLExecutor.class.getName());
 
-=======
-//  static final Logger log = Logger.getLogger(Utils.SQLExecutor.class.getName());
-  
->>>>>>> Stashed changes:src/main/java/Utils/SQLExecutor.java
 //  public static class QueryMapper
 //       extends Mapper<LongWritable, Text, Text, Text>{
 //	private static JSONObject queryJSON;
@@ -150,6 +145,7 @@ public class SQLExecutor {
 		JSONObject queryJSON = new JSONObject();
 
 		if(matcher2.matches()){
+			//System.out.println("Matcher 2");
 			String[] columns = matcher2.group(1).trim().split(",");
 			JSONArray columnsList = new JSONArray();
 			for(String column : columns) {
@@ -157,22 +153,17 @@ public class SQLExecutor {
 			}
 			queryJSON.put("columns", columnsList);
 
+
 //		  JOIN part
-			String joinType  = query.split("join")[0].split("from")[1].trim();
-			String join;
-			if(joinType.contains("left")){
-				join = "left";
-			} else if(joinType.contains("right")) {
-				join = "right";
-			} else if(joinType.contains("outer") || joinType.contains("full")){
-				join = "full";
-			} else {
-				join = "inner";
+			String joinType  = query.split("join")[0].split("from")[1];
+			String [] arr = joinType.split(" ", 3);
+			if (arr[2].equals("")) {
+				arr[2] = "inner";
 			}
-			queryJSON.put("joinType", join);
+			queryJSON.put("joinType", arr[2].split(" ",2)[0]);
 
 			JSONObject tableJSON = new JSONObject();
-			tableJSON.put("table1", matcher2.group(3).split(" ")[1].trim());
+			tableJSON.put("table1", matcher2.group(3).trim());
 			tableJSON.put("table2", matcher2.group(8).trim());
 			queryJSON.put("table", tableJSON);
 
@@ -262,19 +253,13 @@ public class SQLExecutor {
 
 	public static void main(String[] args) throws Exception {
 //    Configuration conf = new Configuration();
-<<<<<<< Updated upstream:src/main/java/SQLExecutor.java
-		String sqlQuery = "select * from users left join rating on users.userid = rating.userid where adit = fool";
+		String sqlQuery = "select userid from users left outer join ratings on users.userid = rating.userid where users.gender = m";
 		JSONObject queryJSON = parseSQL(sqlQuery.toLowerCase());
 		System.out.println(queryJSON);
-=======
-	  String sqlQuery = "select * from users left outer join rating where f = f on users.userid = rating.userid";
-	  JSONObject queryJSON = parseSQL(sqlQuery.toLowerCase());
-	  System.out.println(queryJSON);
->>>>>>> Stashed changes:src/main/java/Utils/SQLExecutor.java
 //    conf.set("queryJSONString", queryJSON.toString());
 //
 //    Job job = Job.getInstance(conf, "word count");
-//    job.setJarByClass(Utils.SQLExecutor.class);
+//    job.setJarByClass(SQLExecutor.class);
 //    job.setMapperClass(QueryMapper.class);
 //    job.setReducerClass(QueryReducer.class);
 //    job.setOutputKeyClass(Text.class);
@@ -303,7 +288,7 @@ public class SQLExecutor {
 //    conf.set("queryJSONString", queryJSON.toString());
 //
 //    Job job = Job.getInstance(conf, "word count");
-//    job.setJarByClass(Utils.SQLExecutor.class);
+//    job.setJarByClass(SQLExecutor.class);
 //    job.setMapperClass(QueryMapper.class);
 //    job.setReducerClass(QueryReducer.class);
 //    job.setOutputKeyClass(Text.class);
