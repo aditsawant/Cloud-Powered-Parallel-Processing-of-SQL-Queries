@@ -253,7 +253,8 @@ public class SQLExecutor {
 
 	public static void main(String[] args) throws Exception {
 //    Configuration conf = new Configuration();
-		String sqlQuery = "select userid from users left outer join ratings on users.userid = rating.userid where users.gender = m";
+		String sqlQuery = "select occupation, count(userid) from users where gender = m group by occupation having count(userid) > 1";
+//		String sqlQuery = "select userid from users left outer join ratings on users.userid = rating.userid where users.gender = m";
 		JSONObject queryJSON = parseSQL(sqlQuery.toLowerCase());
 		System.out.println(queryJSON);
 //    conf.set("queryJSONString", queryJSON.toString());

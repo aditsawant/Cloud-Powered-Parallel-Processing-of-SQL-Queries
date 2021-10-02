@@ -3,10 +3,7 @@ package Utils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -83,21 +80,31 @@ public class SQLQueries {
 //        return dataset;
 //    }
 
-    public static Table select(JSONObject queryJSON, Table dataset){
+    public static void select(JSONObject queryJSON, Table dataset){
         JSONArray temp = (JSONArray) queryJSON.get("columns");
         System.out.println(dataset.getTableName());
         ArrayList<String> columns = new ArrayList<>();
-        for(int i = 0; i < temp.length(); i++){
-            columns.add((String) temp.get(i));
+        //        String str = null;
+        for (Object curr : temp) {
+            if ((curr.toString()).charAt(0) != '{') {
+                System.out.println(curr);
+                columns.add(curr.toString());
+            }
+//            else {
+//                JSONObject cJSON = (JSONObject) curr;
+//                columns.add((String) cJSON.get("column"));
+//            }
         }
+        Set<String> set = new LinkedHashSet<>(columns);
+        columns = new ArrayList<>(set);
+//        for(int i = 0; i < temp.length(); i++){
+//            columns.add((String) temp.getJSONObject(i));
+//        }
 //        System.out.println(columns.toString());
         JSONObject tableJSON = (JSONObject) Table.getMappingJSON().get(dataset.getTableName());
 //        String[] all_columns = tableJSON.keySet().toArray();
         System.out.println(tableJSON.toString());
-        ArrayList<String> all_columns = new ArrayList<>();
-        for(String s: tableJSON.keySet()){
-            all_columns.add(s);
-        }
+        ArrayList<String> all_columns = new ArrayList<>(tableJSON.keySet());
         System.out.println(columns.toString());
         System.out.println(all_columns.toString());
 
@@ -109,25 +116,70 @@ public class SQLQueries {
 
         ArrayList<String> columnNames = new ArrayList<>(Arrays.asList(headers.get((String) queryJSON.get("table"))));
 
-        for(String s: all_columns){
-            if(!columns.contains(s)){
-                System.out.println("About to drop " + s);
-//                dataset.dropColumn(s);
-                for(ArrayList<Object> row: dataset.table){
-//                    JSONObject tableJSON = (JSONObject) mappingJSON.get(tableName);
-//                    System.out.println(row);
-                    row.remove(columnNames.indexOf(s));
-//                    System.out.println(row);
+        // Case 1: [HANDLED] No aggregates anywhere.
+        // Case 2: [FUCK THIS] Aggregates in select columns without a following group-by clause.
+        // Case 3: Aggregates in select columns followed by a group-by clause.
+
+        if(dataset.aggMap != null){
+            // Case 3
+            for(String s: all_columns){
+                if(!columns.contains(s)){
+                    System.out.println("About to drop " + s);
+                    for(ArrayList<Object> row: dataset.table){
+                        row.remove(columnNames.indexOf(s));
+                    }
+                    columnNames.remove(s);
                 }
-                columnNames.remove(s);
+            }
+            // add extra column
+            ArrayList<Object> toRemove = new ArrayList<>();
+            for(ArrayList<Object> row: dataset.table){
+                if(dataset.aggMap.get(row.get(0)) != null)
+                    row.add(dataset.aggMap.get(row.get(0)));
+                else{
+                    toRemove.add(row);
+                }
+            }
+            for(Object obj: toRemove) {
+                dataset.table.remove(obj);
+            }
+            ArrayList<ArrayList<Object>> newTable = new ArrayList<>();
+            //ALTERNATIVE WAY by AMEY
+//            if(queryJSON.get("having") != null){
+//                JSONObject havingJSON = (JSONObject) queryJSON.get("having");
+//
+//                for(ArrayList<Object> row: dataset.table){
+//                    if(!newTable.contains(row)){
+//                        newTable.add(row);
+//                    }
+//                }
+//            }
+//            else{
+            for(ArrayList<Object> row: dataset.table){
+                if(!newTable.contains(row)){
+                    newTable.add(row);
+                }
+            }
+//            }
+            dataset.setTable(newTable);
+        } else {
+            // Case 1
+            for(String s: all_columns){
+                if(!columns.contains(s)){
+                    System.out.println("About to drop " + s);
+                    for(ArrayList<Object> row: dataset.table){
+                        row.remove(columnNames.indexOf(s));
+                    }
+                    columnNames.remove(s);
+                }
             }
         }
 
 //        System.out.println("This size: " + dataset.table.size());
-        return dataset;
+//        return dataset;
     }
 
-    public static Table where(JSONObject queryJSON, Table dataset){
+    public static void where(JSONObject queryJSON, Table dataset){
         System.out.println("Got inside where");
         JSONObject whereJSON = (JSONObject) queryJSON.get("where");
         String operator = (String) whereJSON.get("operator");
@@ -157,16 +209,24 @@ public class SQLQueries {
 //                        result.add(row);
 //                    }
 //                }
-                if(row.get((int) tableJSON.get(val1)).equals(Integer.parseInt(val2))) {
-                    result.add(row);
+                if(isNumeric(val2)){
+                    if(row.get((int) tableJSON.get(val1)).equals(Integer.parseInt(val2))){
+                        result.add(row);
+                    }
+                } else {
+                    if(((String) row.get((int) tableJSON.get(val1))).equalsIgnoreCase(val2)){
+                        result.add(row);
+                    }
                 }
-                System.out.println("row.size(): " + row.size());
-                System.out.println("result.size(): " + result.size());
+//                System.out.println("row.size(): " + row.size());
+//                System.out.println("result.size(): " + result.size());
             }
         }
         else if(operator.equalsIgnoreCase("!=") || operator.equalsIgnoreCase("<>")) {
             for(ArrayList<Object> row: dataset.table){
-                if(!row.get((int) tableJSON.get(val1)).equals(val2)) {
+                if(isNumeric(val2) && row.get((int) tableJSON.get(val1)).equals(Integer.parseInt(val2))) {
+                    result.add(row);
+                } else if(!isNumeric(val2) && row.get((int) tableJSON.get(val1)).equals(val2)){
                     result.add(row);
                 }
             }
@@ -226,12 +286,11 @@ public class SQLQueries {
                 }
             }
         }
-        Table t = new Table();
-        t.table = result;
-        return t;
+
+        dataset.setTable(result);
     }
 
-    public static Table groupBy(JSONObject queryJSON, Table dataset){
+    public static void groupBy(JSONObject queryJSON, Table dataset){
         HashMap<String, ArrayList<ArrayList<Object>>> groupByMap = new HashMap<>();
         JSONArray temp = (JSONArray) queryJSON.get("groupByColumns");
         ArrayList<String> groupByColumns = new ArrayList<>();
@@ -251,10 +310,12 @@ public class SQLQueries {
             }
         }
         dataset.setGroupByMap(groupByMap);
-        return dataset;
+//        for(String s: groupByMap.keySet()){
+//            System.out.println(groupByMap.get(s));
+//        }
     }
 
-    public static Table having(JSONObject queryJSON, Table dataset){
+    public static void having(JSONObject queryJSON, Table dataset){
         JSONObject havingJSON= (JSONObject) queryJSON.get("having");
         String aggFunc = (String) havingJSON.get("function");
         String aggColumn = (String) havingJSON.get("column");
@@ -292,10 +353,15 @@ public class SQLQueries {
             }
         }
         else if(aggOperator.equalsIgnoreCase(">")) {
+            ArrayList<String> toRemove = new ArrayList<>();
             for(Map.Entry<String, Integer> entry: aggMap.entrySet()){
                 if(entry.getValue() <= Integer.parseInt(aggValue)){
                     dataset.getGroupByMap().remove(entry.getKey());
+                    toRemove.add(entry.getKey());
                 }
+            }
+            for(String key: toRemove) {
+                aggMap.remove(key);
             }
         }
         else if(aggOperator.equalsIgnoreCase("<")) {
@@ -306,17 +372,16 @@ public class SQLQueries {
             }
         }
 
-        ArrayList<ArrayList<Object>> table = new ArrayList<>();
+//        ArrayList<ArrayList<Object>> table = new ArrayList<>();
 
-        for(Map.Entry<String, Integer> entry: aggMap.entrySet()){
-            ArrayList<Object> arr = new ArrayList<>();
-            arr.add(entry.getKey());
-            arr.add(entry.getValue());
-            table.add(arr);
-        }
-        Table result = new Table();
-        result.setTable(table);
-        return result;
+//        for(Map.Entry<String, Integer> entry: aggMap.entrySet()){
+//            ArrayList<Object> arr = new ArrayList<>();
+//            arr.add(entry.getKey());
+//            arr.add(entry.getValue());
+//            table.add(arr);
+//        }
+        dataset.aggMap = aggMap;
+//        dataset.setTable(table);
     }
 
     public static Table join(JSONObject queryJSON, Table dataset1, Table dataset2){
@@ -386,5 +451,14 @@ public class SQLQueries {
                 System.out.println("\nInvalid aggregate function.");
         }
         return aggMap;
+    }
+
+    public static boolean isNumeric(String str) {
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch(NumberFormatException e){
+            return false;
+        }
     }
 }

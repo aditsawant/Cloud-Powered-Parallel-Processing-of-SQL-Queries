@@ -8,3 +8,4 @@
 • Add epsilon for having check
 • Add code to handle string comparisons in "where" in SQLQueries
 • Add file input/output support
+• Add float support for aggregate calculations

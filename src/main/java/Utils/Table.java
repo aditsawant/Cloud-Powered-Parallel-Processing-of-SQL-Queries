@@ -14,6 +14,7 @@ import org.json.simple.parser.ParseException;
 public class Table {
     private static JSONObject mappingJSON;
     public ArrayList<ArrayList<Object>> table;
+    public HashMap<String, Integer> aggMap;
     private String tableName;
 
     public void setTableName(String tableName) {

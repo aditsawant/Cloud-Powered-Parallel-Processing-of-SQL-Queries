@@ -1,0 +1,1 @@
+select occupation, count(userid) from users where gender = m group by occupation having count(userid) > 10

@@ -1,11 +1,13 @@
 package Spark;
 
+import Utils.SQLExecutor;
 import Utils.SQLQueries;
 import Utils.Table;
 import org.apache.spark.api.java.function.ForeachFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.execution.ui.SQLAppStatusListener;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,17 +22,19 @@ import static Utils.SQLExecutor.parseSQL;
 public class SparkExecutor {
     private static final Logger log =
             LoggerFactory.getLogger(SparkExecutor.class);
-    private static JSONObject queryJSON;
-    private static String sqlQuery;
+    public static JSONObject queryJSON;
+    public static String sqlQuery;
     private static long time_ms;
 
-    public static void main(String[] args) {
+    public static void SparkDriver(ArrayList<String> queries){
         SparkExecutor app = new SparkExecutor();
-        SparkExecutor.sqlQuery = "select occupation from users where age = 20";
-        SparkExecutor.queryJSON = parseSQL(SparkExecutor.sqlQuery.toLowerCase());
-        System.out.println(sqlQuery);
-        System.out.println(queryJSON);
-        app.start();
+        for(String query: queries){
+            SparkExecutor.sqlQuery = query;
+            SparkExecutor.queryJSON = SQLExecutor.parseSQL(query.toLowerCase());
+            System.out.println(query);
+            System.out.println(SparkExecutor.queryJSON);
+            app.start();
+        }
     }
 
     public static JSONObject sparkOutput(String sqlQuery) {
@@ -48,9 +52,9 @@ public class SparkExecutor {
     /**
      * The processing code.
      */
-    private void start() {
+    public void start() {
         // Creates a session on a local master
-        long start = new Date().getTime();
+//        long start = new Date().getTime();
 
         System.out.println("Reached inside app.start");
         SparkSession spark = SparkSession.builder()
@@ -77,24 +81,40 @@ public class SparkExecutor {
 //        df.show();
         System.out.println("Going to run sparkDfToTable.");
         Table dataset = SparkExecutor.sparkDfToTable(df);
+        dataset.setTableName((String)queryJSON.get("table"));
+        System.out.println("Dataset created.");
 
-        System.out.println("dataset created.");
+        long start = new Date().getTime();
 
-        Table result = SQLQueries.where(queryJSON, dataset);
-        result.setTableName((String)queryJSON.get("table"));
-        result = SQLQueries.select(queryJSON, result);
+        if(dataset.table.isEmpty()) System.out.println("TABLE is empty initially!");
+//        System.out.println(dataset.table.size());
+        System.out.println("Init: " + dataset.table.get(0));
+        SQLQueries.where(queryJSON, dataset);
+        if(dataset.table.isEmpty()) System.out.println("TABLE is empty after where!");
+//        System.out.println(dataset.table.size());
+        System.out.println("Post where: " + dataset.table.get(0));
+        SQLQueries.groupBy(queryJSON, dataset);
+        if(dataset.table.isEmpty()) System.out.println("TABLE is empty after groupby!");
+//        System.out.println(dataset.table.size());
+        System.out.println("Post group by: " + dataset.table.get(0));
+        SQLQueries.having(queryJSON, dataset);
+        if(dataset.table.isEmpty()) System.out.println("TABLE is empty after having!");
+//        System.out.println(dataset.table.size());
+        System.out.println("Post having: " + dataset.table.get(0));
+        SQLQueries.select(queryJSON, dataset);
+        System.out.println("Post select: " + dataset.table.get(0));
 
+        long end = new Date().getTime();
         System.out.println("select has been executed.");
-        for (ArrayList<Object> arr : result.table) {
+        if(dataset.table.isEmpty()) System.out.println("TABLE is empty!");
+        for (ArrayList<Object> arr : dataset.table) {
             System.out.println(arr.toString());
         }
-
 //        String sqlStatement = SparkExecutor.sqlQuery;
-
 //        Dataset<Row> sqlDf = spark.sql(sqlStatement);
 //        sqlDf.show();
-        long end = new Date().getTime();
-        System.out.println("Spark Execution Time "+(end-start) + "milliseconds");
+//        long end = new Date().getTime();
+        System.out.println("Spark Execution Time "+(end-start) + " milliseconds");
         time_ms = end - start;
     }
 
@@ -105,27 +125,10 @@ public class SparkExecutor {
         for(Row row: rowList){
             ArrayList<Object> temp = new ArrayList<>();
             for(int i = 0; i < row.length(); i++){
-//                System.out.print(row.get(i) + " ");
                 temp.add(row.get(i));
             }
-//            System.out.println("temp.size: " + temp.size());
-//            System.out.println();
             table.add(temp);
-//            System.out.println("table.size(): " + table.size());
         }
-
-//        df.foreach((ForeachFunction<Row>) row -> {
-//            ArrayList<Object> temp = new ArrayList<>();
-//            for(int i = 0; i < row.length(); i++){
-//                System.out.print(row.get(i) + " ");
-//                temp.add(row.get(i));
-//            }
-////            System.out.println("temp.size: " + temp.size());
-//            System.out.println();
-//            table.add(temp);
-//            System.out.println("table.size(): " + table.size());
-//        });
-        System.out.println("New table size: " + table.size());
         Table dataset = new Table();
         dataset.setTable(table);
         return dataset;
