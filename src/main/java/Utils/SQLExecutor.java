@@ -136,6 +136,14 @@ public class SQLExecutor {
 //  }
 
 	public static JSONObject parseSQL(String query) {
+
+		//ignore semicolon at the end;
+		if(query.charAt(query.length()-1) == ';'){
+			query = query.substring(0, query.length() - 1);
+		}
+		//remove all the inverted commas
+		query = query.replaceAll("[']"," ");
+
 		Pattern pattern1 = Pattern.compile("select (.+(,.+)*) from(.+) where(.+) (=|>|<|>=|<=|<>|like|in) (.+)");
 		Pattern pattern2 = Pattern.compile("select (.+(,.+)*) from(.+) ((natural)? ((left|right) outer )|inner )?join (.+) on (.+)=(.+) where(.+) (=|>|<|>=|<=|<>|like|in) (.+)");
 		Pattern pattern3 = Pattern.compile("select (.+(,.+)*) from(.+) where(.+) (=|>|<|>=|<=|<>|like|in) (.+) group by (.+) having (sum|count|max|min)\\((.+)\\) (>=|<=|==|!=|>|<) (.+)");
@@ -145,14 +153,12 @@ public class SQLExecutor {
 		JSONObject queryJSON = new JSONObject();
 
 		if(matcher2.matches()){
-			//System.out.println("Matcher 2");
 			String[] columns = matcher2.group(1).trim().split(",");
 			JSONArray columnsList = new JSONArray();
 			for(String column : columns) {
 				columnsList.put(column.trim());
 			}
 			queryJSON.put("columns", columnsList);
-
 
 //		  JOIN part
 			String joinType  = query.split("join")[0].split("from")[1];
@@ -163,7 +169,7 @@ public class SQLExecutor {
 			queryJSON.put("joinType", arr[2].split(" ",2)[0]);
 
 			JSONObject tableJSON = new JSONObject();
-			tableJSON.put("table1", matcher2.group(3).trim());
+			tableJSON.put("table1", matcher2.group(3).split(" ")[1].trim());
 			tableJSON.put("table2", matcher2.group(8).trim());
 			queryJSON.put("table", tableJSON);
 
@@ -253,8 +259,7 @@ public class SQLExecutor {
 
 	public static void main(String[] args) throws Exception {
 //    Configuration conf = new Configuration();
-		String sqlQuery = "select occupation, count(userid) from users where gender = m group by occupation having count(userid) > 1";
-//		String sqlQuery = "select userid from users left outer join ratings on users.userid = rating.userid where users.gender = m";
+		String sqlQuery = "select userid, age from users outer join rating on users.userid = rating.userid where gender = 'M';";
 		JSONObject queryJSON = parseSQL(sqlQuery.toLowerCase());
 		System.out.println(queryJSON);
 //    conf.set("queryJSONString", queryJSON.toString());
