@@ -3,11 +3,10 @@ package Spark;
 import Utils.SQLExecutor;
 import Utils.SQLQueries;
 import Utils.Table;
-import org.apache.spark.api.java.function.ForeachFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.execution.ui.SQLAppStatusListener;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +19,7 @@ import java.util.List;
 import static Utils.SQLExecutor.parseSQL;
 
 public class SparkExecutor {
+    public static HashMap<String, String[]> headers = new HashMap<>();
     private static final Logger log =
             LoggerFactory.getLogger(SparkExecutor.class);
     public static JSONObject queryJSON;
@@ -28,13 +28,27 @@ public class SparkExecutor {
 
     public static void SparkDriver(ArrayList<String> queries){
         SparkExecutor app = new SparkExecutor();
+        JSONArray outputTimes = new JSONArray();
         for(String query: queries){
             SparkExecutor.sqlQuery = query;
-            SparkExecutor.queryJSON = SQLExecutor.parseSQL(query.toLowerCase());
+            JSONObject ogQueryJSON = SQLExecutor.parseSQL(query.toLowerCase());
+            ArrayList<String> finalCols = new ArrayList<>();
+            for(Object col: (JSONArray) ogQueryJSON.get("columns")){
+                if(col.toString().equalsIgnoreCase("*")){
+                    finalCols.add(col.toString());
+                } else finalCols.add(col.toString().split("\\.")[1]);
+            }
+            ogQueryJSON.put("columns", finalCols);
+            SparkExecutor.queryJSON = ogQueryJSON;
             System.out.println(query);
             System.out.println(SparkExecutor.queryJSON);
             app.start();
+
+            JSONObject sparkSpec = new JSONObject();
+            sparkSpec.put("Spark Execution Time in ms for query" + (queries.indexOf(query) + 1), time_ms);
+            outputTimes.put(sparkSpec);
         }
+        System.out.println(outputTimes);
     }
 
     public static JSONObject sparkOutput(String sqlQuery) {
@@ -68,44 +82,75 @@ public class SparkExecutor {
         headers.put("users", new String[]{"userid", "age", "gender", "occupation", "zipcode"});
         headers.put("zipcodes", new String[]{"zipcode", "zipcodetype", "city", "state"});
         headers.put("rating", new String[]{"userid", "movieid", "rating", "timestamp"});
+        headers.put("moviesXrating", new String[]{"title", "releasedate", "unknown", "Action", "Adventure", "Animation", "Children", "Comedy", "Crime", "Documentary", "Drama", "Fantasy", "Film_Noir", "Horror", "Musical", "Mystery", "Romance", "Sci_Fi", "Thriller", "War", "Western", "userid", "movieid", "rating", "timestamp"});
+        headers.put("ratingXmovies", new String[]{"userid", "rating", "timestamp", "movieid", "title", "releasedate", "unknown", "Action", "Adventure", "Animation", "Children", "Comedy", "Crime", "Documentary", "Drama", "Fantasy", "Film_Noir", "Horror", "Musical", "Mystery", "Romance", "Sci_Fi", "Thriller", "War", "Western"});
+        headers.put("usersXzipcodes", new String[]{"userid", "age", "gender", "occupation", "zipcode", "zipcodetype", "city", "state"});
+        headers.put("zipcodesXusers", new String[]{"zipcodetype", "city", "state", "userid", "age", "gender", "occupation", "zipcode"});
+        headers.put("usersXrating", new String[]{"age", "gender", "occupation", "zipcode", "userid", "movieid", "rating", "timestamp"});
+        headers.put("ratingXusers", new String[]{"movieid", "rating", "timestamp", "userid", "age", "gender", "occupation", "zipcode"});
 
-        Dataset<Row> df = spark.read().format("csv")
-                .option("header", true)
-                .option("inferSchema", true)
-                .load("data/input/".concat(SparkExecutor.queryJSON.getString("table")).concat(".csv"))
-                .toDF(headers.get(SparkExecutor.queryJSON.getString("table")));
+        Table dataset = null;
+        if(queryJSON.opt("joinType") == null) {
+            Dataset<Row> df = spark.read().format("csv")
+                    .option("header", true)
+                    .option("inferSchema", true)
+                    .load("data/input/".concat(SparkExecutor.queryJSON.getString("table")).concat(".csv"))
+                    .toDF(headers.get(SparkExecutor.queryJSON.getString("table")));
 
-        System.out.println("Spark read done.");
-        // Calculating the orders info using SparkSQL
-        df.createOrReplaceTempView(SparkExecutor.queryJSON.getString("table"));
-//        df.show();
-        System.out.println("Going to run sparkDfToTable.");
-        Table dataset = SparkExecutor.sparkDfToTable(df);
-        dataset.setTableName((String)queryJSON.get("table"));
-        System.out.println("Dataset created.");
+            System.out.println("Spark read done.");
+            df.createOrReplaceTempView(SparkExecutor.queryJSON.getString("table"));
+            System.out.println("Going to run sparkDfToTable.");
+            dataset = SparkExecutor.sparkDfToTable(df);
+            dataset.setTableName((String) queryJSON.get("table"));
+            System.out.println("Dataset created.");
+
+        }
+        else{
+            Dataset<Row> df1 = spark.read().format("csv")
+                    .option("header", true)
+                    .option("inferSchema", true)
+                    .load("data/input/".concat(((JSONObject)SparkExecutor.queryJSON.get("table")).getString("table1")).concat(".csv"))
+                    .toDF(headers.get(((JSONObject)SparkExecutor.queryJSON.get("table")).getString("table1")));
+            //read headers and add in arraylist
+            Dataset<Row> df2 = spark.read().format("csv")
+                    .option("header", true)
+                    .option("inferSchema", true)
+                    .load("data/input/".concat(((JSONObject)SparkExecutor.queryJSON.get("table")).getString("table2")).concat(".csv"))
+                    .toDF(headers.get(((JSONObject)SparkExecutor.queryJSON.get("table")).getString("table2")));
+
+            dataset = SQLQueries.join(queryJSON, SparkExecutor.sparkDfToTable(df1), SparkExecutor.sparkDfToTable(df2));
+        }
 
         long start = new Date().getTime();
-
-        if(dataset.table.isEmpty()) System.out.println("TABLE is empty initially!");
+        if (dataset.table.isEmpty()) System.out.println("TABLE is empty initially!");
 //        System.out.println(dataset.table.size());
         System.out.println("Init: " + dataset.table.get(0));
+
         SQLQueries.where(queryJSON, dataset);
+
         if(dataset.table.isEmpty()) System.out.println("TABLE is empty after where!");
 //        System.out.println(dataset.table.size());
         System.out.println("Post where: " + dataset.table.get(0));
-        SQLQueries.groupBy(queryJSON, dataset);
+
+//        SQLQueries.groupBy(queryJSON, dataset);
+
         if(dataset.table.isEmpty()) System.out.println("TABLE is empty after groupby!");
 //        System.out.println(dataset.table.size());
         System.out.println("Post group by: " + dataset.table.get(0));
-        SQLQueries.having(queryJSON, dataset);
+
+//        SQLQueries.having(queryJSON, dataset);
+
         if(dataset.table.isEmpty()) System.out.println("TABLE is empty after having!");
 //        System.out.println(dataset.table.size());
         System.out.println("Post having: " + dataset.table.get(0));
+
         SQLQueries.select(queryJSON, dataset);
+
         System.out.println("Post select: " + dataset.table.get(0));
+        System.out.println("select has been executed.");
 
         long end = new Date().getTime();
-        System.out.println("select has been executed.");
+
         if(dataset.table.isEmpty()) System.out.println("TABLE is empty!");
         for (ArrayList<Object> arr : dataset.table) {
             System.out.println(arr.toString());

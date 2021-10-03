@@ -1,6 +1,4 @@
 import Spark.SparkExecutor;
-import Utils.SQLExecutor;
-import Utils.SQLExecutor.*;
 import java.util.*;
 import java.io.*;
 
@@ -22,18 +20,10 @@ public class Driver {
             e.printStackTrace();
         }
 
-
-//        File file = new File("D:\\IntelliJ\\Cloud_Assignment\\data\\input\\query.txt");
-//        BufferedReader br = new BufferedReader(new FileReader(file));
-//        while (br.readLine() != null) {
-//            queries.add(br.readLine());
-//        }
         // 2.csv
         //call Spark
-//        for(String q: queries){
-//            System.out.println(q);
-//        }
         SparkExecutor.SparkDriver(queries);
+
         //call Hadoop + pass dataset
         //call Storm
     }

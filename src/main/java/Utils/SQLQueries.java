@@ -1,8 +1,10 @@
 package Utils;
 
+import Spark.SparkExecutor;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -84,7 +86,10 @@ public class SQLQueries {
         JSONArray temp = (JSONArray) queryJSON.get("columns");
         System.out.println(dataset.getTableName());
         ArrayList<String> columns = new ArrayList<>();
-        //        String str = null;
+        if(temp.get(0).toString().equalsIgnoreCase("*")){
+            System.out.println("\n\n\n\n ABOUT TO RETURN");
+            return;
+        }
         for (Object curr : temp) {
             if ((curr.toString()).charAt(0) != '{') {
                 System.out.println(curr);
@@ -104,17 +109,39 @@ public class SQLQueries {
         JSONObject tableJSON = (JSONObject) Table.getMappingJSON().get(dataset.getTableName());
 //        String[] all_columns = tableJSON.keySet().toArray();
         System.out.println(tableJSON.toString());
-        ArrayList<String> all_columns = new ArrayList<>(tableJSON.keySet());
+        ArrayList<String> all_columns = new ArrayList<>();
+
+
+//        for (Iterator<String> it = tableJSON.keys(); it.hasNext(); ) {
+//            String key = it.next();
+//            if(key != null) all_columns.add(key);
+//            else System.out.println("BC kya chutiyap");
+//        }
         System.out.println(columns.toString());
         System.out.println(all_columns.toString());
 
-        HashMap<String, String[]> headers = new HashMap<>();
-        headers.put("movies", new String[]{"movieid", "title", "releasedate", "unknown", "Action", "Adventure", "Animation", "Children", "Comedy", "Crime", "Documentary", "Drama", "Fantasy", "Film_Noir", "Horror", "Musical", "Mystery", "Romance", "Sci_Fi", "Thriller", "War", "Western"});
-        headers.put("users", new String[]{"userid", "age", "gender", "occupation", "zipcode"});
-        headers.put("zipcodes", new String[]{"zipcode", "zipcodetype", "city", "state"});
-        headers.put("rating", new String[]{"userid", "movieid", "rating", "timestamp"});
+        ArrayList<String> columnNames = new ArrayList<>();
+        if(queryJSON.opt("joinType") == null){
+            columnNames = new ArrayList<>(Arrays.asList(SparkExecutor.headers.get((String) queryJSON.get("table"))));
+        } else {
+            JSONObject newTableJSON = (JSONObject) queryJSON.get("table");
+            String tableName = newTableJSON.get("table1") + "X" + newTableJSON.get("table2");
+//            columnNames = new ArrayList<>(Arrays.asList(SparkExecutor.headers.get(newTableJSON)));
+            JSONObject obj = (JSONObject) Table.getMappingJSON().get(tableName);
+            for(int i = 0; i < obj.length(); i++){
+                for (Iterator<String> it = obj.keys(); it.hasNext(); ) {
+                    String key = it.next();
+                    if((int) obj.get(key) == i) {
+                        all_columns.add(key);
+                        columnNames.add(key);
+                    }
+                }
+            }
+        }
+        System.out.println(columns.toString());
+        System.out.println(all_columns.toString());
+        System.out.println("ColumnNames: " + columnNames.toString());
 
-        ArrayList<String> columnNames = new ArrayList<>(Arrays.asList(headers.get((String) queryJSON.get("table"))));
 
         // Case 1: [HANDLED] No aggregates anywhere.
         // Case 2: [FUCK THIS] Aggregates in select columns without a following group-by clause.
@@ -196,7 +223,13 @@ public class SQLQueries {
         Double epsilon = 0.0001;
 
         ArrayList<ArrayList<Object>> result = new ArrayList<>();
+//        if(dataset.getTableName() != null){
+        System.out.println(Table.getMappingJSON());
         JSONObject tableJSON = (JSONObject) Table.getMappingJSON().get(dataset.getTableName());
+//        } else {
+//            ArrayList<String> head = new ArrayList<>(Arrays.asList(SparkExecutor.headers.get(dataset.getTableName())));
+//            int colIndex = head.indexOf(val1);
+//        }
         if(operator.equals("=") || operator.equals("==")) {
             for(ArrayList<Object> row: dataset.table){
 //                if(val2.getClass().getSimpleName().equals("Integer")){
@@ -214,6 +247,7 @@ public class SQLQueries {
                         result.add(row);
                     }
                 } else {
+                    System.out.println(row.get((int) tableJSON.get(val1)));
                     if(((String) row.get((int) tableJSON.get(val1))).equalsIgnoreCase(val2)){
                         result.add(row);
                     }
@@ -389,12 +423,102 @@ public class SQLQueries {
         JSONObject onJSON = (JSONObject) queryJSON.get("on");
         String cond1 = (String) onJSON.get("condition1");
         String cond2 = (String) onJSON.get("condition2");
+//        System.out.println(cond1);
+//        System.out.println((cond1.split("\\.")).length);
+        String col = cond1.split("\\.")[1];
+        String table1 = cond1.split("\\.")[0];
+        String table2 = cond2.split("\\.")[0];
+        int colIndex1 = (int) ((JSONObject) Table.getMappingJSON().get(table1)).get(col);
+        int colIndex2 = (int) ((JSONObject) Table.getMappingJSON().get(table2)).get(col);
         Table result = new Table();
-
-//        switch(joinType){
-//            "inner":
-//
-//        }
+        result.setTableName((String) table1+"X"+table2);
+        switch(joinType){
+            case "inner":
+                //iterate over table1 and add matching rows from table 2 to new table
+               for(ArrayList<Object> row: dataset1.table) {
+                    for(ArrayList<Object> row2: dataset2.table) {
+                        if(row.get(colIndex1).equals(row2.get(colIndex2))) {
+                            ArrayList<Object> newRow = new ArrayList<>();
+                            newRow.addAll(row);
+                            newRow.remove(colIndex1);
+                            newRow.addAll(row2);
+                            result.table.add(newRow);
+                        }
+                    }
+                }
+                break;
+            case "left":
+                //iterate over table1 and add row elems for rest add null
+                for(ArrayList<Object> row: dataset1.table) {
+                    for(ArrayList<Object> row2: dataset2.table) {
+                        if(row.get(colIndex1).equals(row2.get(colIndex2))) {
+                            ArrayList<Object> newRow = new ArrayList<>();
+                            newRow.addAll(row);
+                            newRow.remove(colIndex1);
+                            newRow.addAll(row2);
+                            result.table.add(newRow);
+                        }
+                        else {
+                            ArrayList<Object> newRow = new ArrayList<>();
+                            newRow.addAll(row);
+                            for(int i=0; i<row2.size()-1; i++) {
+                                newRow.add("null");
+                            }
+                            result.table.add(newRow);
+                        }
+                    }
+                }
+                break;
+            case "right":
+                for(ArrayList<Object> row: dataset2.table) {
+                    for(ArrayList<Object> row2: dataset1.table) {
+                        if(row.get(colIndex1).equals(row2.get(colIndex2))) {
+                            ArrayList<Object> newRow = new ArrayList<>();
+                            newRow.addAll(row);
+                            newRow.remove(colIndex1);
+                            newRow.addAll(row2);
+                            result.table.add(newRow);
+                        }
+                        else {
+                            ArrayList<Object> newRow = new ArrayList<>();
+                            for(int i=0; i<row.size()-1; i++) {
+                                newRow.add("null");
+                            }
+                            newRow.addAll(row2);
+                            result.table.add(newRow);
+                        }
+                    }
+                }
+                break;
+            case "outer":
+                for(ArrayList<Object> row: dataset1.table) {
+                    for(ArrayList<Object> row2: dataset2.table) {
+                        if(row.get(colIndex1).equals(row2.get(colIndex2))) {
+                            ArrayList<Object> newRow = new ArrayList<>();
+                            newRow.addAll(row);
+                            newRow.remove(colIndex1);
+                            newRow.addAll(row2);
+                            result.table.add(newRow);
+                        } else {
+                            ArrayList<Object> newRow = new ArrayList<>();
+                            for(int i=0; i<row.size()-1; i++) {
+                                newRow.add("null");
+                            }
+                            newRow.addAll(row2);
+                            result.table.add(newRow);
+                            ArrayList<Object> newRow2 = new ArrayList<>();
+                            newRow2.addAll(row);
+                            for(int i=0; i<row2.size()-1; i++) {
+                                newRow2.add("null");
+                            }
+                            result.table.add(newRow2);
+                        }
+                    }
+                }
+                break;
+            default:
+                System.out.println("kuch bt idk fuck this");
+        }
 
         return result;
     }
