@@ -13,17 +13,6 @@ public class Zipcode extends Table {
         this.state = state;
     }
 
-    public Zipcode()
-    {
-        this.zipcode = "null";
-        this.zipcodetype = "null";
-        this.city = "null";
-        this.state = "null";
-    }
-    public static Integer getNumColumns()
-    {
-        return 4;
-    }
     public Object getColumnValue(String columnName) {
         if(columnName.equalsIgnoreCase("zipcode")) {
             return this.zipcode;

@@ -14,18 +14,6 @@ public class Rating extends Table {
         this.rating = Integer.parseInt(rating);
         this.timestamp = Integer.parseInt(timestamp);
     }
-    public Rating()
-    {
-        this.userid = -1;
-        this.movieid = -1;
-        this.rating = -1;
-        this.timestamp = -1;
-    }
-    public static Integer getNumColumns()
-    {
-        return 4;
-    }
-
     public Object getColumnValue(String columnName) {
         if(columnName.equalsIgnoreCase("userid")) {
             return this.userid;

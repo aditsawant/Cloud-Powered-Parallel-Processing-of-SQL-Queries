@@ -59,36 +59,6 @@ public class Movie extends Table {
         War = Integer.parseInt(war);
         Western = Integer.parseInt(western);
     }
-    public Movie()
-    {
-        this.movieid = -1;
-        this.title = "";
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yy", null);
-        this.releasedate = LocalDate.parse("", formatter);
-        this.unknown = Integer.parseInt("");
-        Action = Integer.parseInt("");
-        Adventure = Integer.parseInt("");
-        Animation = Integer.parseInt("");
-        Children = Integer.parseInt("");
-        Comedy = Integer.parseInt("");
-        Crime = Integer.parseInt("");
-        Documentary = Integer.parseInt("");
-        Drama = Integer.parseInt("");
-        Fantasy = Integer.parseInt("");
-        Film_Noir = Integer.parseInt("");
-        Horror = Integer.parseInt("");
-        Musical = Integer.parseInt("");
-        Mystery = Integer.parseInt("");
-        Romance = Integer.parseInt("");
-        Sci_Fi = Integer.parseInt("");
-        Thriller = Integer.parseInt("");
-        War = Integer.parseInt("");
-        Western = Integer.parseInt("");
-    }
-    public static Integer getNumColumns()
-    {
-        return 22;
-    }
 
 
     public Object getColumnValue(String columnName){

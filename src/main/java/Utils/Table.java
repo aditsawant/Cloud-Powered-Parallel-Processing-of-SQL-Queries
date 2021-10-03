@@ -57,11 +57,11 @@ public class Table {
         }
     }
 
-    public Object getColumnValue(String columnName){return null;}
-    public String groupByString(String[] columns){return null;}
-    public Boolean checkColumnValue(String columnName, String value){return null;}
-    public Object getAggregate(String operation, String column, ArrayList<Table> arr){return null;}
-    public Boolean compareAggregate(String column, String operation, String comparisonOperator, String value, ArrayList<Table> arr){return null;}
+    Object getColumnValue(String columnName){return null;}
+    String groupByString(String[] columns){return null;}
+    Boolean checkColumnValue(String columnName, String value){return null;}
+    Object getAggregate(String operation, String column, ArrayList<Table> arr){return null;}
+    Boolean compareAggregate(String column, String operation, String comparisonOperator, String value, ArrayList<Table> arr){return null;}
 
     void dropColumn(String columnName){
         for(ArrayList<Object> row: this.table){
