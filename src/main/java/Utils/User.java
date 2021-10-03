@@ -12,6 +12,19 @@ public class User extends Table {
         this.occupation = occupation;
         this.zipcode = zipcode;
     }
+
+    public User()
+    {
+        this.userid = -1;
+        this.age = -1;//Integer.parseInt(null);
+        this.gender = "null";//null;
+        this.occupation = "null";//null;
+        this.zipcode = "null";//null;
+    }
+    public static Integer getNumColumns()
+    {
+        return 5;
+    }
     public Object getColumnValue(String columnName) {
         if(columnName.equalsIgnoreCase("userid")) {
             return this.userid;
