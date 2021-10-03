@@ -155,10 +155,6 @@ public class SparkExecutor {
         for (ArrayList<Object> arr : dataset.table) {
             System.out.println(arr.toString());
         }
-//        String sqlStatement = SparkExecutor.sqlQuery;
-//        Dataset<Row> sqlDf = spark.sql(sqlStatement);
-//        sqlDf.show();
-//        long end = new Date().getTime();
         System.out.println("Spark Execution Time "+(end-start) + " milliseconds");
         time_ms = end - start;
     }

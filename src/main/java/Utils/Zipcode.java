@@ -1,7 +1,6 @@
 package Utils;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 
 public class Zipcode extends Table {
     private String zipcode,zipcodetype,city,state;

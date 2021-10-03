@@ -1,7 +1,5 @@
 package Utils;
 
-import java.util.ArrayList;
-
 public class TableFactory {
     public static Table getTable(String tableName, String row) {
 //		System.out.println(row);

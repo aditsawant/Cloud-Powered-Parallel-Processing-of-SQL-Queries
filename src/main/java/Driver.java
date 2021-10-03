@@ -16,7 +16,7 @@ public class Driver {
             }
             myReader.close();
         } catch (FileNotFoundException e) {
-            System.out.println("An error occurred.");
+            System.out.println("Query input file not found.");
             e.printStackTrace();
         }
 

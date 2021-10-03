@@ -1,14 +1,11 @@
 package Utils;
 
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-
 import org.json.JSONObject;
 import org.json.JSONTokener;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+
+import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 
 public class Table {
@@ -46,22 +43,19 @@ public class Table {
     public Table() {
         this.tableName = "users";
         table = new ArrayList<>();
-        JSONParser parser = new JSONParser();
         try {
             JSONTokener jsonTokener = new JSONTokener(new FileReader(".\\ColumnIndexMapping.json"));
             mappingJSON = new JSONObject(jsonTokener);
-//            Object obj = parser.parse(new FileReader(".\\ColumnIndexMapping.json"));
-//            mappingJSON = (JSONObject) obj;
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    Object getColumnValue(String columnName){return null;}
-    String groupByString(String[] columns){return null;}
-    Boolean checkColumnValue(String columnName, String value){return null;}
-    Object getAggregate(String operation, String column, ArrayList<Table> arr){return null;}
-    Boolean compareAggregate(String column, String operation, String comparisonOperator, String value, ArrayList<Table> arr){return null;}
+    public Object getColumnValue(String columnName){return null;}
+    public String groupByString(String[] columns){return null;}
+    public Boolean checkColumnValue(String columnName, String value){return null;}
+    public Object getAggregate(String operation, String column, ArrayList<Table> arr){return null;}
+    public Boolean compareAggregate(String column, String operation, String comparisonOperator, String value, ArrayList<Table> arr){return null;}
 
     void dropColumn(String columnName){
         for(ArrayList<Object> row: this.table){
