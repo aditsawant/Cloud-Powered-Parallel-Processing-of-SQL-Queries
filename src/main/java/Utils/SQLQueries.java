@@ -4,6 +4,7 @@ import Spark.SparkExecutor;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -109,8 +110,6 @@ public class SQLQueries {
 //        String[] all_columns = tableJSON.keySet().toArray();
         System.out.println(tableJSON.toString());
         ArrayList<String> all_columns = new ArrayList<>();
-
-
 //        for (Iterator<String> it = tableJSON.keys(); it.hasNext(); ) {
 //            String key = it.next();
 //            if(key != null) all_columns.add(key);
@@ -246,8 +245,20 @@ public class SQLQueries {
                         result.add(row);
                     }
                 } else {
-                    System.out.println(row.get((int) tableJSON.get(val1)));
-                    if(((String) row.get((int) tableJSON.get(val1))).equalsIgnoreCase(val2)){
+                    System.out.println(val1);
+                    System.out.println(val2);
+                    System.out.println(dataset.getTableName());
+                    ArrayList<String> colsForJoin = new ArrayList<>();
+                    for(String col: SparkExecutor.headers.get(dataset.getTableName())){
+                        colsForJoin.add(col);
+                    };
+                    System.out.println(colsForJoin);
+                    //ArrayList<String> aListColsForJoin = new ArrayList<>(Arrays.asList(colsForJoin));
+                    //int indexOfVal1 = aListColsForJoin.indexOf(val1);
+                    int indexOfVal1 = colsForJoin.indexOf(val1);
+                    System.out.println(indexOfVal1);
+                    System.out.println(row.get(indexOfVal1));
+                    if(((String) row.get(indexOfVal1)).equalsIgnoreCase(val2)){
                         result.add(row);
                     }
                 }
@@ -432,6 +443,20 @@ public class SQLQueries {
         Table result = new Table();
         result.setTableName((String) table1+"X"+table2);
         switch(joinType){
+            case "natural":
+                //iterate over table1 and add matching rows from table 2 to new table
+                for(ArrayList<Object> row: dataset1.table) {
+                    for(ArrayList<Object> row2: dataset2.table) {
+                        if(row.get(colIndex1).equals(row2.get(colIndex2))) {
+                            ArrayList<Object> newRow = new ArrayList<>();
+                            newRow.addAll(row);
+                            newRow.remove(colIndex1);
+                            newRow.addAll(row2);
+                            result.table.add(newRow);
+                        }
+                    }
+                }
+                break;
             case "inner":
                 //iterate over table1 and add matching rows from table 2 to new table
                for(ArrayList<Object> row: dataset1.table) {
@@ -439,7 +464,7 @@ public class SQLQueries {
                         if(row.get(colIndex1).equals(row2.get(colIndex2))) {
                             ArrayList<Object> newRow = new ArrayList<>();
                             newRow.addAll(row);
-                            newRow.remove(colIndex1);
+                            //newRow.remove(colIndex1);
                             newRow.addAll(row2);
                             result.table.add(newRow);
                         }
@@ -453,7 +478,7 @@ public class SQLQueries {
                         if(row.get(colIndex1).equals(row2.get(colIndex2))) {
                             ArrayList<Object> newRow = new ArrayList<>();
                             newRow.addAll(row);
-                            newRow.remove(colIndex1);
+                            //newRow.remove(colIndex1);
                             newRow.addAll(row2);
                             result.table.add(newRow);
                         }
@@ -474,7 +499,7 @@ public class SQLQueries {
                         if(row.get(colIndex1).equals(row2.get(colIndex2))) {
                             ArrayList<Object> newRow = new ArrayList<>();
                             newRow.addAll(row);
-                            newRow.remove(colIndex1);
+                            //newRow.remove(colIndex1);
                             newRow.addAll(row2);
                             result.table.add(newRow);
                         }
@@ -495,7 +520,7 @@ public class SQLQueries {
                         if(row.get(colIndex1).equals(row2.get(colIndex2))) {
                             ArrayList<Object> newRow = new ArrayList<>();
                             newRow.addAll(row);
-                            newRow.remove(colIndex1);
+                            //newRow.remove(colIndex1);
                             newRow.addAll(row2);
                             result.table.add(newRow);
                         } else {

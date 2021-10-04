@@ -1,1 +1,1 @@
-select users.age, rating.timestamp from users join rating on users.userid = rating.userid where gender = f
+select * from users left join rating on users.userid = rating.userid where gender = f

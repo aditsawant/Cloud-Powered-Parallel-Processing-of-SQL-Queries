@@ -77,17 +77,17 @@ public class SparkExecutor {
                 .getOrCreate();
 
         System.out.println("Spark session created.");
-        HashMap<String, String[]> headers = new HashMap<>();
+//        HashMap<String, String[]> headers = new HashMap<>();
         headers.put("movies", new String[]{"movieid", "title", "releasedate", "unknown", "Action", "Adventure", "Animation", "Children", "Comedy", "Crime", "Documentary", "Drama", "Fantasy", "Film_Noir", "Horror", "Musical", "Mystery", "Romance", "Sci_Fi", "Thriller", "War", "Western"});
         headers.put("users", new String[]{"userid", "age", "gender", "occupation", "zipcode"});
         headers.put("zipcodes", new String[]{"zipcode", "zipcodetype", "city", "state"});
         headers.put("rating", new String[]{"userid", "movieid", "rating", "timestamp"});
-        headers.put("moviesXrating", new String[]{"title", "releasedate", "unknown", "Action", "Adventure", "Animation", "Children", "Comedy", "Crime", "Documentary", "Drama", "Fantasy", "Film_Noir", "Horror", "Musical", "Mystery", "Romance", "Sci_Fi", "Thriller", "War", "Western", "userid", "movieid", "rating", "timestamp"});
-        headers.put("ratingXmovies", new String[]{"userid", "rating", "timestamp", "movieid", "title", "releasedate", "unknown", "Action", "Adventure", "Animation", "Children", "Comedy", "Crime", "Documentary", "Drama", "Fantasy", "Film_Noir", "Horror", "Musical", "Mystery", "Romance", "Sci_Fi", "Thriller", "War", "Western"});
-        headers.put("usersXzipcodes", new String[]{"userid", "age", "gender", "occupation", "zipcode", "zipcodetype", "city", "state"});
-        headers.put("zipcodesXusers", new String[]{"zipcodetype", "city", "state", "userid", "age", "gender", "occupation", "zipcode"});
-        headers.put("usersXrating", new String[]{"age", "gender", "occupation", "zipcode", "userid", "movieid", "rating", "timestamp"});
-        headers.put("ratingXusers", new String[]{"movieid", "rating", "timestamp", "userid", "age", "gender", "occupation", "zipcode"});
+        headers.put("moviesXrating", new String[]{"movieid", "title", "releasedate", "unknown", "Action", "Adventure", "Animation", "Children", "Comedy", "Crime", "Documentary", "Drama", "Fantasy", "Film_Noir", "Horror", "Musical", "Mystery", "Romance", "Sci_Fi", "Thriller", "War", "Western", "userid", "movieid", "rating", "timestamp"});
+        headers.put("ratingXmovies", new String[]{"userid", "movieid", "rating", "timestamp", "movieid", "title", "releasedate", "unknown", "Action", "Adventure", "Animation", "Children", "Comedy", "Crime", "Documentary", "Drama", "Fantasy", "Film_Noir", "Horror", "Musical", "Mystery", "Romance", "Sci_Fi", "Thriller", "War", "Western"});
+        headers.put("usersXzipcodes", new String[]{"userid", "age", "gender", "occupation", "zipcode", "zipcode", "zipcodetype", "city", "state"});
+        headers.put("zipcodesXusers", new String[]{"zipcode", "zipcodetype", "city", "state", "userid", "age", "gender", "occupation", "zipcode"});
+        headers.put("usersXrating", new String[]{"userid", "age", "gender", "occupation", "zipcode", "userid", "movieid", "rating", "timestamp"});
+        headers.put("ratingXusers", new String[]{"userid", "movieid", "rating", "timestamp", "userid", "age", "gender", "occupation", "zipcode"});
 
         Table dataset = null;
         if(queryJSON.opt("joinType") == null) {
