@@ -147,7 +147,7 @@ public class SQLExecutor {
 		Pattern pattern1 = Pattern.compile("select (.+(,.+)*) from(.+) where(.+) (=|>|<|>=|<=|<>|like|in) (.+)");
 		Pattern pattern2 = Pattern.compile("select (.+(,.+)*) from(.+) (((left|right|full) outer )|inner )?join (.+) on (.+)=(.+) where(.+) (=|>|<|>=|<=|<>|like|in) (.+)");
 		Pattern pattern2_ = Pattern.compile("select (.+(,.+)*) from(.+) natural join (.+) where(.+) (=|>|<|>=|<=|<>|like|in) (.+)");
-		Pattern pattern3 = Pattern.compile("select (.+(,.+)*) from(.+) where(.+) (=|>|<|>=|<=|<>|like|in) (.+) group by (.+) having (sum|count|max|min)\\((.+)\\) (>=|<=|==|!=|>|<) (.+)");
+		Pattern pattern3 = Pattern.compile("select (.+(,.+)*) from(.+) where(.+) (=|>|<|>=|<=|<>|like|in) (.+) group by (.+) having (sum|count|max|min|avg)\\((.+)\\) (>=|<=|==|!=|>|<) (.+)");
 		Matcher matcher1 = pattern1.matcher(query);
 		Matcher matcher2 = pattern2.matcher(query);
 		Matcher matcher2_ = pattern2_.matcher(query);
