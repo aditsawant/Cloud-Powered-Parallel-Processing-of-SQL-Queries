@@ -51,8 +51,13 @@ public class SparkExecutor {
                         JSONObject a = (JSONObject) cols.get(i);
                         a.put("column", ((String) a.get("column")).split("\\.")[1]);
                         newCols.put(a);
-                    } else {
+                    } else{
+                        if(cols.get(i).toString().equals("*")){
+                            newCols.put("*");
+                            break;
+                        }
                         String newColumn = (cols.get(i).toString()).split("\\.")[1];
+
                         newCols.put(newColumn);
                     }
                 }
@@ -175,7 +180,7 @@ public class SparkExecutor {
         System.out.println("Post having: " + dataset.table.get(0));
 
         SQLQueries.select(queryJSON, dataset);
-
+        if(dataset.table.isEmpty()) System.out.println("Table is NULL");
         System.out.println("Post select: " + dataset.table.get(0));
         System.out.println("select has been executed.");
 

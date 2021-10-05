@@ -109,36 +109,45 @@ public class SQLQueries {
         JSONObject tableJSON = (JSONObject) Table.getMappingJSON().get(dataset.getTableName());
 //        String[] all_columns = tableJSON.keySet().toArray();
         System.out.println(tableJSON.toString());
-        ArrayList<String> all_columns = new ArrayList<>();
 //        for (Iterator<String> it = tableJSON.keys(); it.hasNext(); ) {
 //            String key = it.next();
 //            if(key != null) all_columns.add(key);
 //            else System.out.println("BC kya chutiyap");
 //        }
-        System.out.println(columns.toString());
-        System.out.println(all_columns.toString());
+        ArrayList<String> all_columns = null;
 
         ArrayList<String> columnNames = new ArrayList<>();
         if (queryJSON.opt("joinType") == null) {
             all_columns = new ArrayList<>(Arrays.asList(SparkExecutor.headers.get((String) queryJSON.get("table"))));
             columnNames = new ArrayList<>(Arrays.asList(SparkExecutor.headers.get((String) queryJSON.get("table"))));
         } else {
+            if(((String)queryJSON.get("joinType")).equals("natural")){
+                // remove duplicate column
+                JSONObject newTableJSON = (JSONObject) queryJSON.get("table");
+                String tableName = newTableJSON.get("table1") + "X" + newTableJSON.get("table2");
+                JSONObject obj = (JSONObject) Table.getMappingJSON().get(tableName);
+
+                for (int i = 0; i < obj.length(); i++) {
+                    for (Iterator<String> it = obj.keys(); it.hasNext(); ) {
+                        String key = it.next();
+                        if ((int) obj.get(key) == i) {
+                            columnNames.add(key);
+                        }
+                    }
+                }
+            } else {
+                // do not remove duplicate column
+                JSONObject newTableJSON = (JSONObject) queryJSON.get("table");
+                String tableName = newTableJSON.get("table1") + "X" + newTableJSON.get("table2");
+                columnNames = new ArrayList<>(Arrays.asList(SparkExecutor.headers.get(tableName)));
+            }
             JSONObject newTableJSON = (JSONObject) queryJSON.get("table");
             String tableName = newTableJSON.get("table1") + "X" + newTableJSON.get("table2");
 //            columnNames = new ArrayList<>(Arrays.asList(SparkExecutor.headers.get(newTableJSON)));
-            JSONObject obj = (JSONObject) Table.getMappingJSON().get(tableName);
-            for (int i = 0; i < obj.length(); i++) {
-                for (Iterator<String> it = obj.keys(); it.hasNext(); ) {
-                    String key = it.next();
-                    if ((int) obj.get(key) == i) {
-                        all_columns.add(key);
-                        columnNames.add(key);
-                    }
-                }
-            }
+            all_columns = new ArrayList<>(Arrays.asList(SparkExecutor.headers.get(tableName)));
         }
-        System.out.println(columns.toString());
-        System.out.println(all_columns.toString());
+        System.out.println("Columns to be selected: " + columns.toString());
+        System.out.println("All_Columns: " + all_columns.toString());
         System.out.println("ColumnNames: " + columnNames.toString());
 
 
@@ -193,6 +202,7 @@ public class SQLQueries {
             for (String s : all_columns) {
                 if (!columns.contains(s)) {
                     System.out.println("About to drop " + s);
+                    System.out.println("Index: " + columnNames.indexOf(s));
                     for (ArrayList<Object> row : dataset.table) {
                         row.remove(columnNames.indexOf(s));
                     }
@@ -337,6 +347,7 @@ public class SQLQueries {
         }
 
         JSONObject tableJSON = (JSONObject) Table.getMappingJSON().get(dataset.getTableName());
+        System.out.println();
         int colIndex = (int) tableJSON.get(groupByColumns.get(0));
         for (ArrayList<Object> row : dataset.table) {
             if (groupByMap.containsKey(row.get(colIndex))) {
@@ -344,7 +355,7 @@ public class SQLQueries {
             } else {
                 ArrayList<ArrayList<Object>> tempTable = new ArrayList<>();
                 tempTable.add(row);
-                groupByMap.put((String) row.get(colIndex), tempTable);
+                groupByMap.put(row.get(colIndex).toString(), tempTable);
             }
         }
         dataset.setGroupByMap(groupByMap);
