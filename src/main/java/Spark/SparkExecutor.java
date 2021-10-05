@@ -10,11 +10,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.util.parsing.json.JSON;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import static Utils.SQLExecutor.parseSQL;
 
@@ -31,15 +29,44 @@ public class SparkExecutor {
         JSONArray outputTimes = new JSONArray();
         for(String query: queries){
             SparkExecutor.sqlQuery = query;
-            JSONObject ogQueryJSON = SQLExecutor.parseSQL(query.toLowerCase());
-            ArrayList<String> finalCols = new ArrayList<>();
-            for(Object col: (JSONArray) ogQueryJSON.get("columns")){
-                if(col.toString().equalsIgnoreCase("*")){
-                    finalCols.add(col.toString());
-                } else finalCols.add(col.toString().split("\\.")[1]);
+//            JSONObject ogQueryJSON = SQLExecutor.parseSQL(query.toLowerCase());
+//            ArrayList<String> finalCols = new ArrayList<>();
+//            for(Object col: (JSONArray) ogQueryJSON.get("columns")){
+//                if(col.toString().equalsIgnoreCase("*")){
+//                    finalCols.add(col.toString());
+//                } else finalCols.add(col.toString().split("\\.")[1]);
+//            }
+//            ogQueryJSON.put("columns", finalCols);
+//            SparkExecutor.queryJSON = ogQueryJSON;
+            SparkExecutor.queryJSON = SQLExecutor.parseSQL(query.toLowerCase());
+            if(SparkExecutor.queryJSON.opt("having") != null){
+                JSONObject havingJSON = (JSONObject) SparkExecutor.queryJSON.opt("having");
+                ((JSONObject) queryJSON.get("having")).put("column", ((String)havingJSON.get("column")).split("\\.")[1]);
             }
-            ogQueryJSON.put("columns", finalCols);
-            SparkExecutor.queryJSON = ogQueryJSON;
+            if(SparkExecutor.queryJSON.opt("columns") != null){
+                JSONArray newCols = new JSONArray();
+                JSONArray cols = (JSONArray)SparkExecutor.queryJSON.get("columns");
+                for(int i = 0; i < cols.length(); i++) {
+                    if(!(cols.get(i) instanceof String)){
+                        JSONObject a = (JSONObject) cols.get(i);
+                        a.put("column", ((String) a.get("column")).split("\\.")[1]);
+                        newCols.put(a);
+                    } else {
+                        String newColumn = (cols.get(i).toString()).split("\\.")[1];
+                        newCols.put(newColumn);
+                    }
+                }
+                SparkExecutor.queryJSON.put("columns", newCols);
+            }
+            if(SparkExecutor.queryJSON.opt("where") != null){
+                ((JSONObject) SparkExecutor.queryJSON.get("where")).put("value1", ((String)((JSONObject) SparkExecutor.queryJSON.get("where")).get("value1")).split("\\.")[1]);
+            }
+            if(SparkExecutor.queryJSON.opt("groupByColumns") != null){
+                JSONArray jArr = (JSONArray) SparkExecutor.queryJSON.get("groupByColumns");
+                JSONArray newJArr = new JSONArray();
+                newJArr.put(((String)jArr.get(0)).split("\\.")[1]);
+                SparkExecutor.queryJSON.put("groupByColumns", newJArr);
+            }
             System.out.println(query);
             System.out.println(SparkExecutor.queryJSON);
             app.start();
@@ -126,19 +153,22 @@ public class SparkExecutor {
 //        System.out.println(dataset.table.size());
         System.out.println("Init: " + dataset.table.get(0));
 
-        SQLQueries.where(queryJSON, dataset);
+        if(queryJSON.opt("where") != null)
+            SQLQueries.where(queryJSON, dataset);
 
         if(dataset.table.isEmpty()) System.out.println("TABLE is empty after where!");
 //        System.out.println(dataset.table.size());
         System.out.println("Post where: " + dataset.table.get(0));
 
-//        SQLQueries.groupBy(queryJSON, dataset);
+        if(queryJSON.opt("groupByColumns") != null)
+            SQLQueries.groupBy(queryJSON, dataset);
 
         if(dataset.table.isEmpty()) System.out.println("TABLE is empty after groupby!");
 //        System.out.println(dataset.table.size());
         System.out.println("Post group by: " + dataset.table.get(0));
 
-//        SQLQueries.having(queryJSON, dataset);
+        if(queryJSON.opt("having") != null)
+            SQLQueries.having(queryJSON, dataset);
 
         if(dataset.table.isEmpty()) System.out.println("TABLE is empty after having!");
 //        System.out.println(dataset.table.size());

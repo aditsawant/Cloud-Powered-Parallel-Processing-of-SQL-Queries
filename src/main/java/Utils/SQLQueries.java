@@ -120,6 +120,7 @@ public class SQLQueries {
 
         ArrayList<String> columnNames = new ArrayList<>();
         if(queryJSON.opt("joinType") == null){
+            all_columns = new ArrayList<>(Arrays.asList(SparkExecutor.headers.get((String) queryJSON.get("table"))));
             columnNames = new ArrayList<>(Arrays.asList(SparkExecutor.headers.get((String) queryJSON.get("table"))));
         } else {
             JSONObject newTableJSON = (JSONObject) queryJSON.get("table");
@@ -161,7 +162,7 @@ public class SQLQueries {
             for(ArrayList<Object> row: dataset.table){
                 if(dataset.aggMap.get(row.get(0)) != null)
                     row.add(dataset.aggMap.get(row.get(0)));
-                else{
+                else {
                     toRemove.add(row);
                 }
             }
@@ -222,7 +223,7 @@ public class SQLQueries {
 
         ArrayList<ArrayList<Object>> result = new ArrayList<>();
 //        if(dataset.getTableName() != null){
-        System.out.println(Table.getMappingJSON());
+//        System.out.println(Table.getMappingJSON());
         JSONObject tableJSON = (JSONObject) Table.getMappingJSON().get(dataset.getTableName());
 //        } else {
 //            ArrayList<String> head = new ArrayList<>(Arrays.asList(SparkExecutor.headers.get(dataset.getTableName())));
@@ -245,19 +246,19 @@ public class SQLQueries {
                         result.add(row);
                     }
                 } else {
-                    System.out.println(val1);
-                    System.out.println(val2);
-                    System.out.println(dataset.getTableName());
+//                    System.out.println(val1);
+//                    System.out.println(val2);
+//                    System.out.println(dataset.getTableName());
                     ArrayList<String> colsForJoin = new ArrayList<>();
                     for(String col: SparkExecutor.headers.get(dataset.getTableName())){
                         colsForJoin.add(col);
                     };
-                    System.out.println(colsForJoin);
+//                    System.out.println(colsForJoin);
                     //ArrayList<String> aListColsForJoin = new ArrayList<>(Arrays.asList(colsForJoin));
                     //int indexOfVal1 = aListColsForJoin.indexOf(val1);
                     int indexOfVal1 = colsForJoin.indexOf(val1);
-                    System.out.println(indexOfVal1);
-                    System.out.println(row.get(indexOfVal1));
+//                    System.out.println(indexOfVal1);
+//                    System.out.println(row.get(indexOfVal1));
                     if(((String) row.get(indexOfVal1)).equalsIgnoreCase(val2)){
                         result.add(row);
                     }
@@ -270,7 +271,8 @@ public class SQLQueries {
             for(ArrayList<Object> row: dataset.table){
                 if(isNumeric(val2) && row.get((int) tableJSON.get(val1)).equals(Integer.parseInt(val2))) {
                     result.add(row);
-                } else if(!isNumeric(val2) && row.get((int) tableJSON.get(val1)).equals(val2)){
+                }
+                else if(!isNumeric(val2) && row.get((int) tableJSON.get(val1)).equals(val2)){
                     result.add(row);
                 }
             }
@@ -324,7 +326,6 @@ public class SQLQueries {
         else if(operator.equalsIgnoreCase("IN")) {
             for(ArrayList<Object> row : dataset.table) {
                 String actualValue = (String) row.get((int) tableJSON.get(val1));
-
                 if(val2Array.contains(actualValue)){
                     result.add(row);
                 }
