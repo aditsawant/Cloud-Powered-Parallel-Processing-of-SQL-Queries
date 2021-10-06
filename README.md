@@ -48,7 +48,7 @@ A typical topology consists of Spouts and Bolts. A Spout is used for ingesting d
 
 For our use case, a Spout is created for each table, i.e., 4 Spouts in total for reading data from the csv file and converting it into Tuple Stream. Bolts or Operations in Trident Topology are created for different keywords like WHERE, GROUPBY, HAVING, JOIN and SELECT. Finally, the Tuple Stream coming out of the SELECT Bolt is final output of the query and is written to the final output file along with total execution time.
 
-For Hadoop:
+For Hadoop:  
 Version 3.2.1
 
 -SQL query is parsed and a json object is constructed, which is accessed by mapper and reducer
