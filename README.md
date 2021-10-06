@@ -30,7 +30,8 @@ For Spark:
 
 Based on the input query, we read the relevant tables from their respective queries.
 
-For Storm:
+For Storm:  
+
 Storm version used- 2.2.0  
 Zookeeper version used- 3.6.3  
 
