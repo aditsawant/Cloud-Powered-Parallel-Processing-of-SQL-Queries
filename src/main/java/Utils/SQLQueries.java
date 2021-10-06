@@ -319,11 +319,20 @@ public class SQLQueries {
             }
         } else if (operator.equalsIgnoreCase("LIKE")) {
             for (ArrayList<Object> row : dataset.table) {
-                String actualValue = (String) row.get((int) tableJSON.get(val1));
+                String actualValue = ((String) row.get((int) tableJSON.get(val1)));
                 Pattern pattern = Pattern.compile(val2);
                 Matcher matcher = pattern.matcher(val1);
                 if (matcher.matches()) {
                     result.add(row);
+                }
+//                val2 = val2.replace(".", "\\.");
+                val2 = val2.replace("?", ".");
+                val2 = val2.replace("%", ".*");
+                actualValue = actualValue.toLowerCase();
+                System.out.print(actualValue);
+                System.out.println(val2);
+                if (actualValue.matches(val2)){
+                   result.add(row);
                 }
             }
         } else if (operator.equalsIgnoreCase("IN")) {

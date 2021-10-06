@@ -1,1 +1,1 @@
-select * from users left join rating on users.userid = rating.userid where gender = f
+SELECT occupation, COUNT(userid) FROM users WHERE occupation like e% GROUP BY occupation having COUNT(userid) > 0;

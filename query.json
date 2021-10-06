@@ -1,0 +1,22 @@
+{
+    "having": {
+        "function": "count",
+        "column": "userid",
+        "value": "0",
+        "operator": ">"
+    },
+    "columns": [
+        "occupation",
+        {
+            "function": "count",
+            "column": "userid"
+        }
+    ],
+    "where": {
+        "value2": "e%",
+        "value1": "occupation",
+        "operator": "like"
+    },
+    "table": "users",
+    "groupByColumns": ["occupation"]
+}

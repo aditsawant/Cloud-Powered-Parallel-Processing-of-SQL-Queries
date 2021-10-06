@@ -1,11 +1,11 @@
 package Utils;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.regex.*;
+//import org.apache.log4j.Logger;
+import org.json.*;
 
 //import org.apache.hadoop.conf.Configuration;
 //import org.apache.hadoop.fs.Path;
@@ -145,14 +145,17 @@ public class SQLExecutor {
 		query = query.replaceAll("[']"," ");
 
 		Pattern pattern1 = Pattern.compile("select (.+(,.+)*) from(.+) where(.+) (=|>|<|>=|<=|<>|like|in) (.+)");
-		Pattern pattern2 = Pattern.compile("select (.+(,.+)*) from(.+) ((natural)? ((left|right) outer )|inner )?join (.+) on (.+)=(.+) where(.+) (=|>|<|>=|<=|<>|like|in) (.+)");
-		Pattern pattern3 = Pattern.compile("select (.+(,.+)*) from(.+) where(.+) (=|>|<|>=|<=|<>|like|in) (.+) group by (.+) having (sum|count|max|min)\\((.+)\\) (>=|<=|==|!=|>|<) (.+)");
+		Pattern pattern2 = Pattern.compile("select (.+(,.+)*) from(.+) (((left|right|full) outer )|inner )?join (.+) on (.+)=(.+) where(.+) (=|>|<|>=|<=|<>|like|in) (.+)");
+		Pattern pattern2_ = Pattern.compile("select (.+(,.+)*) from(.+) natural join (.+) where(.+) (=|>|<|>=|<=|<>|like|in) (.+)");
+		Pattern pattern3 = Pattern.compile("select (.+(,.+)*) from(.+) where(.+) (=|>|<|>=|<=|<>|like|in) (.+) group by (.+) having (sum|count|max|min|avg)\\((.+)\\) (>=|<=|==|!=|>|<) (.+)");
 		Matcher matcher1 = pattern1.matcher(query);
 		Matcher matcher2 = pattern2.matcher(query);
+		Matcher matcher2_ = pattern2_.matcher(query);
 		Matcher matcher3 = pattern3.matcher(query);
 		JSONObject queryJSON = new JSONObject();
 
 		if(matcher2.matches()){
+			//System.out.println("matcher2");
 			String[] columns = matcher2.group(1).trim().split(",");
 			JSONArray columnsList = new JSONArray();
 			for(String column : columns) {
@@ -170,23 +173,51 @@ public class SQLExecutor {
 
 			JSONObject tableJSON = new JSONObject();
 			tableJSON.put("table1", matcher2.group(3).split(" ")[1].trim());
-			tableJSON.put("table2", matcher2.group(8).trim());
+			tableJSON.put("table2", matcher2.group(7).trim());
 			queryJSON.put("table", tableJSON);
 
 			JSONObject conditionJSON = new JSONObject();
-			conditionJSON.put("condition1", matcher2.group(9).trim());
-			conditionJSON.put("condition2", matcher2.group(10).trim());
+			conditionJSON.put("condition1", matcher2.group(8).trim());
+			conditionJSON.put("condition2", matcher2.group(9).trim());
 			queryJSON.put("on", conditionJSON);
 
 //		  WHERE part
 			JSONObject whereJSON = new JSONObject();
-			whereJSON.put("value1", matcher2.group(11).trim());
-			whereJSON.put("operator", matcher2.group(12).trim());
-			whereJSON.put("value2", matcher2.group(13).trim());
+			whereJSON.put("value1", matcher2.group(10).trim());
+			whereJSON.put("operator", matcher2.group(11).trim());
+			whereJSON.put("value2", matcher2.group(12).trim());
 			queryJSON.put("where", whereJSON);
 //		  log.info(queryJSON);
 		}
+		else if(matcher2_.matches()){
+//			for (int i = 0; i < 10; i++) {
+//				System.out.println(matcher2_.group(i));
+//			}
+
+			String[] columns = matcher2_.group(1).trim().split(",");
+			JSONArray columnsList = new JSONArray();
+			for(String column : columns) {
+				columnsList.put(column.trim());
+			}
+			queryJSON.put("columns", columnsList);
+
+//		  JOIN part
+			queryJSON.put("joinType", "natural");
+
+			JSONObject tableJSON = new JSONObject();
+			tableJSON.put("table1", matcher2_.group(3).split(" ")[1].trim());
+			tableJSON.put("table2", matcher2_.group(4).trim());
+			queryJSON.put("table", tableJSON);
+
+//		  WHERE part
+			JSONObject whereJSON = new JSONObject();
+			whereJSON.put("value1", matcher2_.group(5).trim());
+			whereJSON.put("operator", matcher2_.group(6).trim());
+			whereJSON.put("value2", matcher2_.group(7).trim());
+			queryJSON.put("where", whereJSON);
+		}
 		else if(matcher3.matches()){
+			//System.out.println("matcher3");
 			//SELECT
 			String[] columns = matcher3.group(1).trim().split(",");
 			JSONArray columnsList = new JSONArray();
@@ -232,6 +263,7 @@ public class SQLExecutor {
 			//log.info(queryJSON);
 		}
 		else if(matcher1.matches()) {
+			//System.out.println("matcher1");
 			//SELECT
 			String[] columns = matcher1.group(1).trim().split(",");
 			JSONArray columnsList = new JSONArray();
@@ -259,7 +291,7 @@ public class SQLExecutor {
 
 	public static void main(String[] args) throws Exception {
 //    Configuration conf = new Configuration();
-		String sqlQuery = "select userid, age from users outer join rating on users.userid = rating.userid where gender = 'M';";
+		String sqlQuery = "select userid from users where gender = 'M'";
 		JSONObject queryJSON = parseSQL(sqlQuery.toLowerCase());
 		System.out.println(queryJSON);
 //    conf.set("queryJSONString", queryJSON.toString());

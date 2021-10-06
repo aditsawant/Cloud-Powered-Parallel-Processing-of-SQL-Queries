@@ -1,4 +1,9 @@
 import Spark.SparkExecutor;
+import Utils.SQLExecutor;
+import org.json.JSONObject;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.io.*;
 
@@ -7,6 +12,8 @@ public class Driver {
         //File reading
         // 1.query
         ArrayList<String> queries = new ArrayList<>();
+
+        //reading queries from query.txt
         try {
             File myObj = new File("data/input/query.txt");
             Scanner myReader = new Scanner(myObj);
@@ -20,12 +27,32 @@ public class Driver {
             e.printStackTrace();
         }
 
-        // 2.csv
-        //call Spark
+        // Writing to query.json
+        JSONObject queryJSON = SQLExecutor.parseSQL(queries.get(0).toLowerCase());
+        FileWriter file = null;
+        try {
+            // Constructs a FileWriter given a file name, using the platform's default charset
+            file = new FileWriter("query.json",false);
+            file.write(queryJSON.toString(4));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                file.flush();
+                file.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        //run Spark
         SparkExecutor.SparkDriver(queries);
 
-        //call Hadoop + pass dataset
-        //call Storm
+        // clear output.txt and run Storm
+        Files.deleteIfExists(Paths.get("Storm_output.txt"));
+        Storm.SQLExecutorTrident.StormDriver();
+
     }
 
 }

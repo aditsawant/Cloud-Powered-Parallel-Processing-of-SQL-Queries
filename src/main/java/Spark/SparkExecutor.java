@@ -8,18 +8,14 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import scala.util.parsing.json.JSON;
 
-import java.util.*;
-
-import static Utils.SQLExecutor.parseSQL;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 
 public class SparkExecutor {
     public static HashMap<String, String[]> headers = new HashMap<>();
-    private static final Logger log =
-            LoggerFactory.getLogger(SparkExecutor.class);
     public static JSONObject queryJSON;
     public static String sqlQuery;
     private static long time_ms;
@@ -29,48 +25,42 @@ public class SparkExecutor {
         JSONArray outputTimes = new JSONArray();
         for(String query: queries){
             SparkExecutor.sqlQuery = query;
-//            JSONObject ogQueryJSON = SQLExecutor.parseSQL(query.toLowerCase());
-//            ArrayList<String> finalCols = new ArrayList<>();
-//            for(Object col: (JSONArray) ogQueryJSON.get("columns")){
-//                if(col.toString().equalsIgnoreCase("*")){
-//                    finalCols.add(col.toString());
-//                } else finalCols.add(col.toString().split("\\.")[1]);
-//            }
-//            ogQueryJSON.put("columns", finalCols);
-//            SparkExecutor.queryJSON = ogQueryJSON;
             SparkExecutor.queryJSON = SQLExecutor.parseSQL(query.toLowerCase());
-            if(SparkExecutor.queryJSON.opt("having") != null){
-                JSONObject havingJSON = (JSONObject) SparkExecutor.queryJSON.opt("having");
-                ((JSONObject) queryJSON.get("having")).put("column", ((String)havingJSON.get("column")).split("\\.")[1]);
-            }
-            if(SparkExecutor.queryJSON.opt("columns") != null){
-                JSONArray newCols = new JSONArray();
-                JSONArray cols = (JSONArray)SparkExecutor.queryJSON.get("columns");
-                for(int i = 0; i < cols.length(); i++) {
-                    if(!(cols.get(i) instanceof String)){
-                        JSONObject a = (JSONObject) cols.get(i);
-                        a.put("column", ((String) a.get("column")).split("\\.")[1]);
-                        newCols.put(a);
-                    } else{
-                        if(cols.get(i).toString().equals("*")){
-                            newCols.put("*");
-                            break;
-                        }
-                        String newColumn = (cols.get(i).toString()).split("\\.")[1];
 
-                        newCols.put(newColumn);
-                    }
+            if(SparkExecutor.queryJSON.opt("joinType") != null){
+                if(SparkExecutor.queryJSON.opt("having") != null){
+                    JSONObject havingJSON = (JSONObject) SparkExecutor.queryJSON.opt("having");
+                    ((JSONObject) queryJSON.get("having")).put("column", ((String)havingJSON.get("column")).split("\\.")[1]);
                 }
-                SparkExecutor.queryJSON.put("columns", newCols);
-            }
-            if(SparkExecutor.queryJSON.opt("where") != null){
-                ((JSONObject) SparkExecutor.queryJSON.get("where")).put("value1", ((String)((JSONObject) SparkExecutor.queryJSON.get("where")).get("value1")).split("\\.")[1]);
-            }
-            if(SparkExecutor.queryJSON.opt("groupByColumns") != null){
-                JSONArray jArr = (JSONArray) SparkExecutor.queryJSON.get("groupByColumns");
-                JSONArray newJArr = new JSONArray();
-                newJArr.put(((String)jArr.get(0)).split("\\.")[1]);
-                SparkExecutor.queryJSON.put("groupByColumns", newJArr);
+                if(SparkExecutor.queryJSON.opt("columns") != null){
+                    JSONArray newCols = new JSONArray();
+                    JSONArray cols = (JSONArray)SparkExecutor.queryJSON.get("columns");
+                    for(int i = 0; i < cols.length(); i++) {
+                        if(!(cols.get(i) instanceof String)){
+                            JSONObject a = (JSONObject) cols.get(i);
+                            a.put("column", ((String) a.get("column")).split("\\.")[1]);
+                            newCols.put(a);
+                        } else{
+                            if(cols.get(i).toString().equals("*")){
+                                newCols.put("*");
+                                break;
+                            }
+                            String newColumn = (cols.get(i).toString()).split("\\.")[1];
+
+                            newCols.put(newColumn);
+                        }
+                    }
+                    SparkExecutor.queryJSON.put("columns", newCols);
+                }
+                if(SparkExecutor.queryJSON.opt("where") != null){
+                    ((JSONObject) SparkExecutor.queryJSON.get("where")).put("value1", ((String)((JSONObject) SparkExecutor.queryJSON.get("where")).get("value1")).split("\\.")[1]);
+                }
+                if(SparkExecutor.queryJSON.opt("groupByColumns") != null){
+                    JSONArray jArr = (JSONArray) SparkExecutor.queryJSON.get("groupByColumns");
+                    JSONArray newJArr = new JSONArray();
+                    newJArr.put(((String)jArr.get(0)).split("\\.")[1]);
+                    SparkExecutor.queryJSON.put("groupByColumns", newJArr);
+                }
             }
             System.out.println(query);
             System.out.println(SparkExecutor.queryJSON);
@@ -83,21 +73,6 @@ public class SparkExecutor {
         System.out.println(outputTimes);
     }
 
-    public static JSONObject sparkOutput(String sqlQuery) {
-        SparkExecutor app = new SparkExecutor();
-        SparkExecutor.queryJSON = parseSQL(SparkExecutor.sqlQuery.toLowerCase());
-        System.out.println(sqlQuery);
-        System.out.println(queryJSON);
-        app.start();
-
-        JSONObject sparkSpec = new JSONObject();
-        sparkSpec.put("Spark Execution Time in ms", new Long(time_ms));
-        return sparkSpec;
-    }
-
-    /**
-     * The processing code.
-     */
     public void start() {
         // Creates a session on a local master
 //        long start = new Date().getTime();
@@ -109,7 +84,7 @@ public class SparkExecutor {
                 .getOrCreate();
 
         System.out.println("Spark session created.");
-//        HashMap<String, String[]> headers = new HashMap<>();
+
         headers.put("movies", new String[]{"movieid", "title", "releasedate", "unknown", "Action", "Adventure", "Animation", "Children", "Comedy", "Crime", "Documentary", "Drama", "Fantasy", "Film_Noir", "Horror", "Musical", "Mystery", "Romance", "Sci_Fi", "Thriller", "War", "Western"});
         headers.put("users", new String[]{"userid", "age", "gender", "occupation", "zipcode"});
         headers.put("zipcodes", new String[]{"zipcode", "zipcodetype", "city", "state"});
