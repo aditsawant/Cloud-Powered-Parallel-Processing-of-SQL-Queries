@@ -1059,12 +1059,12 @@ public class HadoopExecutor {
     {
         String inputDir="data/input";
         String outputDir="data/output";
-        JSONObject queryJSON= SQLExecutor.parseSQL(query);
+        JSONObject queryJSON= Utils.SQLExecutor.parseSQL(query);
 
         Configuration conf = new Configuration();
         conf.set("queryJSONString", queryJSON.toString());
         Job job = Job.getInstance(conf, "Hadoop Job");
-        job.setJarByClass(SQLExecutor.class);
+        job.setJarByClass(Utils.SQLExecutor.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
 

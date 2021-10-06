@@ -1,3 +1,4 @@
+import Hadoop.HadoopExecutor;
 import Spark.SparkExecutor;
 import Storm.StormExecutor;
 import Utils.SQLExecutor;
@@ -11,7 +12,7 @@ import java.util.*;
 import java.io.*;
 
 public class Driver {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         //File reading
         // 1.query
         ArrayList<String> queries = new ArrayList<>();
@@ -57,6 +58,10 @@ public class Driver {
         Files.deleteIfExists(Paths.get("Storm_output.txt"));
         JSONObject stormJSON = StormExecutor.StormDriver();
         result.put("Storm", stormJSON);
+
+        //run Hadoop
+        JSONObject hadoopJSON = HadoopExecutor.Run(queries.get(0));
+        result.put("Hadoop", hadoopJSON);
         System.out.println(result);
     }
 
