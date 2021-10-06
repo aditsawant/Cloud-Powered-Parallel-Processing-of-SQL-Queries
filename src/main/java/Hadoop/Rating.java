@@ -35,16 +35,25 @@ public class Rating extends Table {
         return clist;
     }
     public Object getColumnValue(String columnName) {
-        if(columnName.equalsIgnoreCase("userid")) {
+        if(columnName.equalsIgnoreCase("userid"))
+        {
+            if(this.userid==-1)
+                return "null";
             return this.userid;
         }
         else if(columnName.equalsIgnoreCase("movieid")) {
+            if(this.movieid==-1)
+                return "null";
             return this.movieid;
         }
         else if(columnName.equalsIgnoreCase("rating")) {
+            if(this.rating==-1)
+                return "null";
             return this.rating;
         }
         else if(columnName.equalsIgnoreCase("timestamp")) {
+            if(this.timestamp==-1)
+                return "null";
             return this.timestamp;
         }
         return null;

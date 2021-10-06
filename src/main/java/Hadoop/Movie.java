@@ -1,6 +1,7 @@
 package Hadoop;
 
 import java.time.LocalDate;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -62,7 +63,7 @@ public class Movie extends Table {
     }
 
     public Movie()
-        {
+    {
         this.movieid = -1;
         this.title = "null";
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yy", null);
@@ -160,7 +161,7 @@ public class Movie extends Table {
         }
         if(columnName.equalsIgnoreCase("Fantasy")){
             if(this.Fantasy==-1)
-            return "null";
+                return "null";
             return this.Fantasy;
         }
         if(columnName.equalsIgnoreCase("Film_Noir")){
@@ -180,7 +181,7 @@ public class Movie extends Table {
         }
         if(columnName.equalsIgnoreCase("Mystery")){
             if(this.Mystery==-1)
-            return "null";
+                return "null";
             return this.Mystery;
         }
         if(columnName.equalsIgnoreCase("Romance")){
