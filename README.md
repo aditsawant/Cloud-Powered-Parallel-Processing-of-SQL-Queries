@@ -23,10 +23,12 @@ We will be testing our code on these queries and displaying the respective outpu
 
 ### Approach:
 
-FLOWCHART 
+                                                                          FLOWCHART   
+                                                                          
 ![cloud-a1](https://user-images.githubusercontent.com/54042697/136254816-279a4a0c-77e3-498b-ba1a-353a55d7fa96.jpg)
 
-
+  
+  
 There are four input tables: users, movies, zipcodes, rating.
 
 [INSERT SCHEMA]
