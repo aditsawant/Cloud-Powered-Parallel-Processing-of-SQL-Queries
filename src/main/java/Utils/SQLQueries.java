@@ -329,8 +329,8 @@ public class SQLQueries {
                 val2 = val2.replace("?", ".");
                 val2 = val2.replace("%", ".*");
                 actualValue = actualValue.toLowerCase();
-                System.out.print(actualValue);
-                System.out.println(val2);
+//                System.out.print(actualValue);
+//                System.out.println(val2);
                 if (actualValue.matches(val2)){
                    result.add(row);
                 }

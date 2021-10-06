@@ -8,7 +8,6 @@ import org.json.JSONTokener;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 
 
 public class WhereFilter extends BaseFilter {
@@ -17,24 +16,14 @@ public class WhereFilter extends BaseFilter {
         try {
             JSONTokener jsonTokener = new JSONTokener(new FileReader("query.json"));
             queryJSON = new JSONObject(jsonTokener);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (JSONException e) {
-// TODO Auto-generated catch block
+        } catch (FileNotFoundException | JSONException e) {
             e.printStackTrace();
         }
-
-//        for(Object o : tuple.getValues()) {
-//         System.out.println(o);
-//        }
 
         String value1 = null;
         try {
             value1 = (String) ((JSONObject) queryJSON.get("where")).get("value1");
         } catch (JSONException e) {
-// TODO Auto-generated catch block
             e.printStackTrace();
         }
 
@@ -42,7 +31,6 @@ public class WhereFilter extends BaseFilter {
         try {
             value2 = (String) ((JSONObject) queryJSON.get("where")).get("value2");
         } catch (JSONException e) {
-// TODO Auto-generated catch block
             e.printStackTrace();
         }
         int field_index = tuple.fieldIndex(value1);
@@ -50,14 +38,11 @@ public class WhereFilter extends BaseFilter {
         try {
             operator = (String) ((JSONObject) queryJSON.get("where")).get("operator");
         } catch (JSONException e) {
-// TODO Auto-generated catch block
             e.printStackTrace();
         }
 
         if(operator.equals("=")) {
             String value1_trimmed = tuple.getString(field_index).replaceAll("\"","");
-//         System.out.println(value1_trimmed);
-//         System.out.println(value2);
             return value1_trimmed.equalsIgnoreCase(value2);
         }
         else if(operator.equals(">")) {
@@ -82,8 +67,6 @@ public class WhereFilter extends BaseFilter {
             value2 = value2.replace("?", ".");
             value2 = value2.replace("%", ".*");
             value1_string = value1_string.toLowerCase();
-//            System.out.print(value1_string);
-//            System.out.println(value2);
             return value1_string.matches(value2);
         }
         else {

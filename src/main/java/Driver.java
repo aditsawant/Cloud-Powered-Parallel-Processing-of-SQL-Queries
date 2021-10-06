@@ -1,6 +1,9 @@
 import Spark.SparkExecutor;
+import Storm.StormExecutor;
 import Utils.SQLExecutor;
+import org.apache.spark.sql.catalyst.expressions.JsonTuple;
 import org.json.JSONObject;
+import scala.util.parsing.json.JSON;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -46,13 +49,15 @@ public class Driver {
             }
         }
 
+        JSONObject result = new JSONObject();
         //run Spark
-        SparkExecutor.SparkDriver(queries);
-
+        JSONObject sparkJSON = SparkExecutor.SparkDriver(queries);
+        result.put("Spark", sparkJSON);
         // clear output.txt and run Storm
         Files.deleteIfExists(Paths.get("Storm_output.txt"));
-        Storm.SQLExecutorTrident.StormDriver();
-
+        JSONObject stormJSON = StormExecutor.StormDriver();
+        result.put("Storm", stormJSON);
+        System.out.println(result);
     }
 
 }

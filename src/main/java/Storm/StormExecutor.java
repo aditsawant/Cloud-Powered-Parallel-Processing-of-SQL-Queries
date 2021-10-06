@@ -1,6 +1,7 @@
 package Storm;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.hadoop.util.hash.Hash;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.trident.JoinType;
@@ -21,13 +22,15 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.json.simple.parser.JSONParser;
+import scala.util.parsing.json.JSON;
 
 import java.io.*;
 import java.util.*;
 
 
-public class SQLExecutorTrident {
-    public static void StormDriver(){
+public class StormExecutor {
+    public static JSONObject stormJSON = new JSONObject();
+    public static JSONObject StormDriver() throws IOException {
         JSONParser parser = new JSONParser();
         JSONObject mappingJSON = new JSONObject();
         try {
@@ -262,7 +265,25 @@ public class SQLExecutorTrident {
                 e.printStackTrace();
             }
         }
-        cluster.shutdown();       
+        cluster.shutdown();
+
+        JSONObject stormResult = new JSONObject();
+        JSONTokener jsonTokener = new JSONTokener(new FileReader(".\\Storm_output.json"));
+        stormResult = new JSONObject(jsonTokener);
+
+        File fp = new File(".\\Storm_output.json");
+
+        // Creating an object of BufferedReader class
+        BufferedReader br = new BufferedReader(new FileReader(fp));
+
+        String st;
+        String stormRes = null;
+        while ((st = br.readLine()) != null)
+            stormRes = st;
+
+        stormJSON.put("Time", end-start);
+        stormJSON.put("Storm Query Output", stormRes);
+        return stormJSON;
     }
 
     public static void spout_feeder(String table_name, FeederBatchSpout fbs) {

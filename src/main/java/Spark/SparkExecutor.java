@@ -3,6 +3,7 @@ package Spark;
 import Utils.SQLExecutor;
 import Utils.SQLQueries;
 import Utils.Table;
+import org.apache.hadoop.util.hash.Hash;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -18,9 +19,11 @@ public class SparkExecutor {
     public static HashMap<String, String[]> headers = new HashMap<>();
     public static JSONObject queryJSON;
     public static String sqlQuery;
+    public static HashMap<Integer, String> sparkOpMap = new HashMap<>();
+    public static JSONObject sparkStats = new JSONObject();
     private static long time_ms;
 
-    public static void SparkDriver(ArrayList<String> queries){
+    public static JSONObject SparkDriver(ArrayList<String> queries){
         SparkExecutor app = new SparkExecutor();
         JSONArray outputTimes = new JSONArray();
         for(String query: queries){
@@ -67,10 +70,13 @@ public class SparkExecutor {
             app.start();
 
             JSONObject sparkSpec = new JSONObject();
-            sparkSpec.put("Spark Execution Time in ms for query" + (queries.indexOf(query) + 1), time_ms);
+            sparkSpec.put("Time",time_ms + "ms");
             outputTimes.put(sparkSpec);
         }
         System.out.println(outputTimes);
+        sparkStats.put("Spark Exec Time", outputTimes);
+        sparkStats.put("Spark Query Result", sparkOpMap);
+        return sparkStats;
     }
 
     public void start() {
@@ -161,9 +167,11 @@ public class SparkExecutor {
 
         long end = new Date().getTime();
 
+        int rowSRNO = 1;
         if(dataset.table.isEmpty()) System.out.println("TABLE is empty!");
         for (ArrayList<Object> arr : dataset.table) {
-            System.out.println(arr.toString());
+            sparkOpMap.put(rowSRNO, arr.toString());
+            rowSRNO++;
         }
         System.out.println("Spark Execution Time "+(end-start) + " milliseconds");
         time_ms = end - start;

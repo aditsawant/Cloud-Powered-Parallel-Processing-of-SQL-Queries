@@ -59,7 +59,7 @@ public class SelectFilter extends BaseFunction {
 		}
 		else
 		{
-			try(FileWriter fw = new FileWriter("Storm_output.txt", true); BufferedWriter bw = new BufferedWriter(fw); PrintWriter out = new PrintWriter(bw)) {
+			try(FileWriter fw = new FileWriter("Storm_output.json", true); BufferedWriter bw = new BufferedWriter(fw); PrintWriter out = new PrintWriter(bw)) {
 				out.println(tuple.select(new Fields(this.final_fields)));
 			} catch (IOException e) {
 			    //exception handling left as an exercise for the reader
@@ -77,7 +77,7 @@ public class SelectFilter extends BaseFunction {
 	        try {
 	        	 
 	            // Constructs a FileWriter given a file name, using the platform's default charset
-	        	file = new FileWriter("Storm_output.txt",true);
+	        	file = new FileWriter("Storm_output.json",true);
 	            file.write(map_json.toString());
 	        } catch (IOException e) {
 	            e.printStackTrace();
