@@ -38,7 +38,8 @@ Input Query:
 
 Parsed queryJSON:
 
-![image](https://user-images.githubusercontent.com/39945931/136904945-e0c29b59-9d95-4e70-8e36-87c62dfa4f7c.png)
+![image](https://user-images.githubusercontent.com/39945931/136906644-23bed2ad-0825-4473-9dd0-d50f754f5a6c.png)
+
 
 ### Spark:
 
