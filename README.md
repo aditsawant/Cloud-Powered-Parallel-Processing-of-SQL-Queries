@@ -1,4 +1,4 @@
-# Cloud Assignment 1
+# Cloud-Powered Parallel Processing of SQL Queries
 ### Problem Statement:
 Implementation of SQL queries and executing them using three different frameworks of parallel processing:
 - Spark
